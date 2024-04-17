@@ -1,16 +1,26 @@
-# This is a sample Python script.
+from Layer_Dense import Layer_Dense
+from ActivationFunctions import Activation_ReLU
+from ActivationFunctions import Activation_Sigmoid
+from Loss import Loss_CategoricalCrossentropy
 
-# Press Mayús+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Crea una capa con 25 entradas y 15 valores de salida
+ld = Layer_Dense(25,15)
 
+# Función de activación para capa oculta 1
+activation1 = Activation_ReLU()
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# Crea una segunda capa con 3 entradas (aquí va como entrada
+# la salida de la primera capa) y 2 valores de salida
+ld2 = Layer_Dense(15, 2)
 
+# Función de activación para la segunda capa oculta
+activation2 = Activation_Sigmoid()
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+loss_function = Loss_CategoricalCrossentropy()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+#dense1.forward(X)
+#activation.forward(dense1.output)
+#dense2.forward(X)
+#activation2.forward(dense2.output)
+#print(activation2.output[:5])
+# loss = loss_function.calculate(activation2.output, y)
