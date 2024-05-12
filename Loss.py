@@ -2,6 +2,9 @@ import numpy as np
 
 from ActivationFunctions import Activation_Softmax
 
+# Realizar regularización L2
+# Todos los pesos de la red al cuadrado
+# Página 8 del resumen inicialización
 
 # Clase común de pérdida
 class Loss:
@@ -55,7 +58,7 @@ class Loss_CategoricalCrossentropy(Loss):
 
 class Activation_Softmax_Loss_CategoricalCrossentropy():
 
-    def __int__(self):
+    def __init__(self):
         self.activation = Activation_Softmax()
         self.loss = Loss_CategoricalCrossentropy()
 

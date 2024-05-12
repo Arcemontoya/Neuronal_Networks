@@ -4,6 +4,7 @@ class Activation_ReLU:
 
     def forward(self, inputs):
         #Calcular valores de input
+        self.inputs = inputs
         self.output = np.maximum(0, inputs)
 
     def backward(self, dvalues):
@@ -47,6 +48,7 @@ class Activation_Softmax:
 class Activation_Sigmoid:
 
     def forward(self, inputs):
+        self.inputs = inputs
         #Calcular valores de input
         self.output = 1.0 / (1.0 + np.exp(-inputs))
 
