@@ -9,6 +9,28 @@ from ActivationFunctions import Activation_Softmax
 # Clase común de pérdida
 class Loss:
 
+    def regularization_loss(self, layer):
+        # 0 por defecto
+        regularization_loss = 0
+
+        # L1 regularization - weights
+        # calcular solo cuando el factor es mayor que 0
+        if layer.weight_regularizer_L1 > 0:
+            regularization_loss += layer.weight_regularizer_L1 * np.sum(np.abs(layer.weights))
+
+        # L2 regularization - weights
+        if layer.weight_regularizer_L2 > 0:
+            regularization_loss += layer.weight_regularizer_L2 * np.sum(layer.weights * layer.weights)
+
+        # L1 regularization - biases
+        if layer.bias_regularizer_L1 > 0:
+            regularization_loss += layer.bias_regularizer_L1 * np.sum(np.abs(layer.biases))
+
+        # L2 regularization - biases
+        if layer.bias_regularizer_L2 > 0:
+            regularization_loss += layer.bias_regularizer_L2 * np.sum(layer.biases * layer.biases)
+
+        return regularization_loss
     #Calcula los datos y las perdidas dado a la salida del modelo y lo valores esperados
     def calculate(self, output, y):
 

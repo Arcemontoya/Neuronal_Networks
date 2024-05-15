@@ -29,9 +29,11 @@ activation2 = Activation_Softmax()
 loss_function = Activation_Softmax_Loss_CategoricalCrossentropy()
 
 #Crear optimizador
-optimizer = Optimizer_SGD(learning_rate=1, decay=0., momentum=0.)
+#optimizer = Adadelta_Optimizer(learning_rate = .001, decay = 0.9, epsilon=1e-7)
+optimizer = GDX_Optimizer()
+#optimizer = Optimizer_Adam(learning_rate=0.02, decay=5e-7)
 
-for epoch in range(1001):
+for epoch in range(100001):
 
     ld.forward(X)
 
@@ -39,7 +41,12 @@ for epoch in range(1001):
 
     ld2.forward(activation1.output)
 
-    loss = loss_activation.forward(ld2.output, y)
+    data_loss = loss_activation.forward(ld2.output, y)
+
+    regularization_loss = \
+        loss_activation.loss.regularization_loss(ld) + loss_activation.loss.regularization_loss(ld2)
+
+    loss = data_loss + regularization_loss
 
     predictions = np.argmax(loss_activation.output, axis = 1)
     if len(y.shape) == 2:
@@ -50,7 +57,10 @@ for epoch in range(1001):
         print(f'epoch: {epoch}, ' +
               f'acc: {accuracy:.3f}, ' +
               f'loss: {loss:.3f}, ' +
+              f'data_loss: {data_loss:.3f}, ' +
+              f'reg_loss: {regularization_loss:.3f}, ' +
               f'lr: {optimizer.current_learning_rate}')
+              #)
 
     loss_activation.backward(loss_activation.output, y)
     ld2.backward(loss_activation.dinputs)
