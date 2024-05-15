@@ -45,6 +45,7 @@ class Activation_Softmax:
             #Calcular sample-wise gradient y agregarlo al arrey de gradientes de ejemplo
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
+
 class Activation_Sigmoid:
 
     def forward(self, inputs):
@@ -53,3 +54,46 @@ class Activation_Sigmoid:
         self.output = 1.0 / (1.0 + np.exp(-inputs))
 
 
+class Activation_Tanh:
+
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = np.tanh(inputs)
+
+    def backward(self, dvalues):
+        # Calcular el gradiente de la función de activación tangente hiperbólica (Tanh)
+        self.dinputs = dvalues * (1 - self.output ** 2)
+
+
+class Activation_LeakyReLU:
+    def __init__(self, alpha=0.01):
+        self.alpha = alpha
+
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = np.maximum(self.alpha * inputs, inputs)
+
+    def backward(self, dvalues):
+        self.dinputs = np.where(self.inputs <= 0, self.alpha * dvalues, dvalues)
+
+
+class Activation_ELU:
+    def __init__(self, alpha=1.0):
+        self.alpha = alpha
+
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = np.where(inputs > 0, inputs, self.alpha * (np.exp(inputs) - 1))
+
+    def backward(self, dvalues):
+        self.dinputs = dvalues * np.where(self.inputs > 0, 1, self.alpha * np.exp(self.inputs))
+
+class Activation_Linear:
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = inputs  # La salida es igual a la entrada
+
+    def backward(self, dvalues):
+        # El gradiente es igual al gradiente de la función de pérdida
+        # Esto se hace para mantener la coherencia en la estructura de la red
+        self.dinputs = dvalues
