@@ -1,54 +1,38 @@
-import nnfs
-
-from Layer_Dense import *
+import numpy as np
 from ActivationFunctions import *
-from Loss import Loss_CategoricalCrossentropy, Activation_Softmax_Loss_CategoricalCrossentropy
+from Layer_Dense import *
+from Loss import *
+import nnfs
 from Optimizer import *
 from nnfs.datasets import spiral_data
 
-nnfs.init()
+X, y = spiral_data(samples=100, classes=3)
 
-X, y = spiral_data(samples=1000, classes=3)
+dense1 = Layer_Dense(2,64, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4)
 
-#239
-# Crea una capa con 25 entradas y 15 valores de salida
-ld = Layer_Dense(2,3)
-
-# Función de activación para capa oculta 1
 activation1 = Activation_ReLU()
 
-# Crea una segunda capa con 3 entradas (aquí va como entrada
-# la salida de la primera capa) y 2 valores de salida
-ld2 = Layer_Dense(3, 3)
+dense2 = Layer_Dense(64, 3)
 
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
 
-# Función de activación para la segunda capa oculta
-activation2 = Activation_Softmax()
+optimizer = Optimizer_Adam(learning_rate=0.02, decay=5e-7)
+#optimizer = Adadelta_Optimizer(learning_rate=1, decay=0.9, epsilon=1e-7) # Corregir
+#optimizer = GDX_Optimizer(initial_learning_rate=0.01) # Corregir
 
-loss_function = Activation_Softmax_Loss_CategoricalCrossentropy()
+for epoch in range(10001):
 
-#Crear optimizador
-#optimizer = Adadelta_Optimizer(learning_rate = .001, decay = 0.9, epsilon=1e-7)
-optimizer = GDX_Optimizer()
-#optimizer = Optimizer_Adam(learning_rate=0.02, decay=5e-7)
+    dense1.forward(X)
+    activation1.forward(dense1.output)
+    dense2.forward(activation1.output)
 
-for epoch in range(100001):
+    data_loss = loss_activation.forward(dense2.output, y)
 
-    ld.forward(X)
-
-    activation1.forward(ld.output)
-
-    ld2.forward(activation1.output)
-
-    data_loss = loss_activation.forward(ld2.output, y)
-
-    regularization_loss = \
-        loss_activation.loss.regularization_loss(ld) + loss_activation.loss.regularization_loss(ld2)
+    regularization_loss = loss_activation.loss.regularization_loss(dense1) + loss_activation.loss.regularization_loss(dense2)
 
     loss = data_loss + regularization_loss
 
-    predictions = np.argmax(loss_activation.output, axis = 1)
+    predictions = np.argmax(loss_activation.output, axis=1)
     if len(y.shape) == 2:
         y = np.argmax(y, axis=1)
     accuracy = np.mean(predictions==y)
@@ -57,21 +41,33 @@ for epoch in range(100001):
         print(f'epoch: {epoch}, ' +
               f'acc: {accuracy:.3f}, ' +
               f'loss: {loss:.3f}, ' +
-              f'data_loss: {data_loss:.3f}, ' +
-              f'reg_loss: {regularization_loss:.3f}, ' +
-              f'lr: {optimizer.current_learning_rate}')
-              #)
+              f'data_loss: {data_loss:.3f}, '+
+              f'reg_loss: {regularization_loss:.3f}, '+
+              f'lr: {optimizer.current_learning_rate:.3f}, ')
 
-    loss_activation.backward(loss_activation.output, y)
-    ld2.backward(loss_activation.dinputs)
-    activation1.backward(ld2.dinputs)
-    ld.backward(activation1.dinputs)
+    loss_activation.bakcward(loss_activation.output, y)
+    dense2.backward(loss_activation.dinputs)
+    activation1.backward(dense2.dinputs)
+    dense1.backward(activation1.dinputs)
 
-    # Actualizar pesos y sesgos
     optimizer.pre_update_params()
-    optimizer.update_params(ld)
-    optimizer.update_params(ld2)
-    optimizer.post_update_params()
+    optimizer.update_params(dense1)
+    optimizer.update_params(dense2)
+    optimizer.pre_update_params()
 
+# Validar modelo
 
+#X_test, y_test = spiral_data(samples=100, classes=3)
 
+#dense1.forward(X_test)
+#activation1.forward(dense1.output)
+#dense2.forward(activation1.output)
+
+#loss = loss_activation.forward(dense2.output, y_test)
+
+#predictions = np.argmax(loss_activation.output, axis=1)
+#if len(y_test.shape == 2):
+#    y_test = np.argmax(y_test, axis=1)
+#accuracy = np.mean(predictions == y_test)
+
+#print(f'validation, acc: {accuracy: .3f}, loss: {loss:.3f}')
