@@ -35,6 +35,9 @@ class Activation_Sigmoid:
         #Calcular valores de input
         self.output = 1.0 / (1.0 + np.exp(-inputs))
 
+    def backward(self, dvalues):
+        self.dinputs = dvalues * (1-self.output) * self.output
+
 
 class Activation_Tanh:
 
@@ -78,4 +81,4 @@ class Activation_Linear:
     def backward(self, dvalues):
         # El gradiente es igual al gradiente de la función de pérdida
         # Esto se hace para mantener la coherencia en la estructura de la red
-        self.dinputs = dvalues
+        self.dinputs = dvalues.copy()

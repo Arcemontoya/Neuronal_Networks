@@ -5,7 +5,11 @@ from Loss import *
 import nnfs
 from Optimizer import *
 from nnfs.datasets import spiral_data
+
 import matplotlib.pyplot as plt
+
+from Layer_Dropout import Layer_Dropout
+
 
 X, y = spiral_data(samples=100, classes=3)
 
@@ -13,13 +17,15 @@ dense1 = Layer_Dense(2,64, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4)
 
 activation1 = Activation_ReLU()
 
+dropout1 = Layer_Dropout(0.1)
+
 dense2 = Layer_Dense(64, 3)
 
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
 
-optimizer = Optimizer_Adam(learning_rate=0.02, decay=5e-7)
-#optimizer = Adadelta_Optimizer(learning_rate=1, decay=0.9, epsilon=1e-7) # Corregir
-#optimizer = GDX_Optimizer(initial_learning_rate=0.01) # Corregir
+#optimizer = Optimizer_Adam(learning_rate=0.02, decay=5e-7)
+optimizer = Adadelta_Optimizer(learning_rate=1., decay=0.9, epsilon=1e-7) # Corregir
+#optimizer = GDX_Optimizer(initial_learning_rate=1.7) # Corregir
 
 accuracy_list = []
 loss_list = []
@@ -28,6 +34,9 @@ for epoch in range(1000):
 
     dense1.forward(X)
     activation1.forward(dense1.output)
+
+    dropout1.forward(activation1.output)
+
     dense2.forward(activation1.output)
 
     data_loss = loss_activation.forward(dense2.output, y)
