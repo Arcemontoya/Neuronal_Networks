@@ -5,7 +5,11 @@ from Loss import *
 import nnfs
 from Optimizer import *
 from nnfs.datasets import spiral_data
+
+import matplotlib.pyplot as plt
+
 from Layer_Dropout import Layer_Dropout
+
 
 X, y = spiral_data(samples=100, classes=3)
 
@@ -23,7 +27,10 @@ loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
 optimizer = Adadelta_Optimizer(learning_rate=1., decay=0.9, epsilon=1e-7) # Corregir
 #optimizer = GDX_Optimizer(initial_learning_rate=1.7) # Corregir
 
-for epoch in range(10001):
+accuracy_list = []
+loss_list = []
+
+for epoch in range(1000):
 
     dense1.forward(X)
     activation1.forward(dense1.output)
@@ -37,11 +44,13 @@ for epoch in range(10001):
     regularization_loss = loss_activation.loss.regularization_loss(dense1) + loss_activation.loss.regularization_loss(dense2)
 
     loss = data_loss + regularization_loss
+    loss_list.append(loss)
 
     predictions = np.argmax(loss_activation.output, axis=1)
     if len(y.shape) == 2:
         y = np.argmax(y, axis=1)
     accuracy = np.mean(predictions==y)
+    accuracy_list.append(accuracy)
 
     if not epoch%100:
         print(f'epoch: {epoch}, ' +
@@ -77,3 +86,15 @@ for epoch in range(10001):
 #accuracy = np.mean(predictions == y_test)
 
 #print(f'validation, acc: {accuracy: .3f}, loss: {loss:.3f}')
+
+plt.plot(accuracy_list)
+plt.title("Precision")
+plt.xlabel("Iteraciones")
+plt.ylabel("Valor")
+plt.show()
+
+plt.plot(loss_list)
+plt.title("Perdida")
+plt.xlabel("Iteraciones")
+plt.ylabel("Valor")
+plt.show()
