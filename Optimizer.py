@@ -3,20 +3,25 @@ import numpy as np
 # Todavía en prueba
 
 class GDX_Optimizer:
-    def __init__(self, initial_learning_rate = 0.01):
+    def __init__(self, initial_learning_rate=1, decay=0.):
         self.initial_learning_rate = initial_learning_rate
         self.current_learning_rate = initial_learning_rate
-
+        self.decay = decay
+        self.iterations = 0
 
     def pre_update_params(self):
-        pass
+        if self.decay:
+            self.current_learning_rate = self.initial_learning_rate * (1. / (1. + self.decay * self.iterations))
 
     def update_params(self, layer):
-        layer.weights += -self.current_learning_rate*layer.dweights
-        layer.biases += -self.current_learning_rate*layer.dbiases
+        weight_updates = -self.current_learning_rate * layer.dweights
+        bias_updates = -self.current_learning_rate * layer.dbiases
+
+        layer.weights += weight_updates
+        layer.biases += bias_updates
 
     def post_update_params(self):
-        pass
+        self.iterations += 1
 
 class Adadelta_Optimizer:
     def __init__(self, learning_rate=1., decay=0.9, epsilon=1e-7):
@@ -37,27 +42,30 @@ class Adadelta_Optimizer:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
     def update_params(self, layer):
-        if self.accumulated_gradients_w is None:
-            self.accumulated_gradients_w = np.zeros_like(layer.weights)
-            self.accumulated_gradients_b = np.zeros_like(layer.biases)
-            self.accumulated_updates_w = np.zeros_like(layer.weights)
-            self.accumulated_updates_b = np.zeros_like(layer.biases)
 
-        self.accumulated_gradients_w = self.decay * self.accumulated_gradients_w + (1 - self.decay) * layer.dweights ** 2
-        self.accumulated_gradients_b = self.decay * self.accumulated_gradients_b + (1 - self.decay) * layer.dbiases ** 2
+        if not (hasattr(layer, 'weight_cache')):
+            layer.weight_cache = np.zeros_like(layer.weights)
+            layer.bias_cache = np.zeros_like(layer.biases)
+            layer.delta_weights = np.zeros_like(layer.weights)
+            layer.delta_biases = np.zeros_like(layer.biases)
 
-        weight_updates = - (np.sqrt(self.accumulated_updates_w + self.epsilon) /
-                            np.sqrt(self.accumulated_gradients_w + self.epsilon)) * layer.dweights
-        bias_updates = - (np.sqrt(self.accumulated_updates_b + self.epsilon) /
-                          np.sqrt(self.accumulated_gradients_b + self.epsilon)) * layer.dbiases
+            # Actualiza cache
+        layer.weight_cache = self.decay * layer.weight_cache + (1 - self.decay) * (layer.dweights ** 2)
+        layer.bias_cache = self.decay * layer.bias_cache + (1 - self.decay) * (layer.dbiases ** 2)
 
-        layer.weights += weight_updates
-        layer.biases += bias_updates
+            # Calcula la actualización de pesos y sesgos
+        weight_update = -(np.sqrt(layer.delta_weights + self.epsilon) / np.sqrt(
+            layer.weight_cache + self.epsilon)) * layer.dweights
+        bias_update = -(np.sqrt(layer.delta_biases + self.epsilon) / np.sqrt(
+            layer.bias_cache + self.epsilon)) * layer.dbiases
 
-        self.accumulated_updates_w = self.decay * self.accumulated_updates_w + (1 - self.decay) * weight_updates ** 2
-        self.accumulated_updates_b = self.decay * self.accumulated_updates_b + (1 - self.decay) * bias_updates ** 2
+            # Actualiza los pesos y sesgos
+        layer.weights += weight_update
+        layer.biases += bias_update
 
-
+            # Actualiza delta
+        layer.delta_weights = self.decay * layer.delta_weights + (1 - self.decay) * (weight_update ** 2)
+        layer.delta_biases = self.decay * layer.delta_biases + (1 - self.decay) * (bias_update ** 2)
     def post_update_params(self):
         self.iterations += 1
 
