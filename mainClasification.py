@@ -1,22 +1,39 @@
 import numpy as np
+import pandas as pd
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
-import seaborn as sns
 from Layer_Dense import Layer_Dense
-from ActivationFunctions import *
+#from ActivationFunctions import *
 from Layer_Dropout import Layer_Dropout
 from Optimizer import *
 from Loss import *
+from Arquitecture import *
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+
+#TEMPORAL
+from sklearn.preprocessing import MinMaxScaler
+
 
 # Importar módulos definidos previamente (clases de capas, activaciones, pérdidas, optimizadores)
 # Se asume que estos módulos están definidos correctamente.
 
-# Cargar el dataset
-#"C:/Users/a1271/Downloads/wine_dataset.mat"
-wine_data = loadmat('C:/Users/a1271/Downloads/wine_dataset.mat')
-X = wine_data['wineInputs'].T  # Entradas
-y = wine_data['wineTargets'].T  # Etiquetas
+# Cargar el dataset .mat
+#wine_data = loadmat('wine_dataset.mat')
+#X = wine_data['wineInputs'].T  # Entradas
+#y = wine_data['wineTargets'].T  # Etiquetas
+
+# Carga el dataser .csv
+wine_data = pd.read_csv('wine_dataset.csv')
+wine_data_shuffled = wine_data.sample(frac=1).reset_index(drop=True)
+X = wine_data.iloc[:, :-3].values  # Todas las columnas excepto las últimas 3
+y = wine_data.iloc[:, -3:].values  # Las últimas 3 columnas
+
+print(X.shape)
+
+#Normalizacion con sklearn TEMPORAL
+scaler = MinMaxScaler()
+X_normalized = scaler.fit_transform(X)
 
 # Definir las capas de la red neuronal
 dense1 = Layer_Dense(13, 64, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4)
@@ -27,14 +44,14 @@ dense2 = Layer_Dense(64, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
 
 #optimizer = Adadelta_Optimizer(learning_rate=1., decay=0.9, epsilon=1e-7)
-optimizer = GDX_Optimizer(initial_learning_rate=1, decay=0.9)
+optimizer = GDX_Optimizer(initial_learning_rate=2, decay=0.9)
 
 accuracy_list = []
 loss_list = []
 
 # Entrenamiento de la red neuronal
-for epoch in range(10001):
-    dense1.forward(X)
+for epoch in range(10000):
+    dense1.forward(X_normalized)
     activation1.forward(dense1.output)
     dropout1.forward(activation1.output)
     dense2.forward(dropout1.output)
@@ -71,14 +88,34 @@ for epoch in range(10001):
     optimizer.post_update_params()
 
 # Graficar la precisión y la pérdida
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
 plt.plot(accuracy_list)
 plt.title("Precisión")
-plt.xlabel("Iteraciones")
+plt.xlabel("Epoca")
 plt.ylabel("Valor")
-plt.show()
 
+plt.subplot(1, 2, 2)
 plt.plot(loss_list)
 plt.title("Pérdida")
-plt.xlabel("Iteraciones")
+plt.xlabel("Epoca")
 plt.ylabel("Valor")
+
+plt.show()
+
+# Obtener predicciones finales
+final_predictions = np.argmax(loss_activation.output, axis=1)
+final_true_labels = np.argmax(y, axis=1)
+
+#matriz de confucion
+conf_matrix = confusion_matrix(final_true_labels, final_predictions)
+class_names = ['Clase 1', 'Clase 2', 'Clase 3']
+
+print(conf_matrix)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False, xticklabels=class_names, yticklabels=class_names)
+plt.title('Matriz de Confusión')
+plt.xlabel('Predicho')
+plt.ylabel('Real')
 plt.show()

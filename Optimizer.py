@@ -23,6 +23,7 @@ class GDX_Optimizer:
     def post_update_params(self):
         self.iterations += 1
 
+
 class Adadelta_Optimizer:
     def __init__(self, learning_rate=1., decay=0.9, epsilon=1e-7):
         self.learning_rate = learning_rate
@@ -69,6 +70,7 @@ class Adadelta_Optimizer:
     def post_update_params(self):
         self.iterations += 1
 
+#No necesarios para el proyecto
 class Optimizer_SGD:
 
     # Inicializar optimizador
@@ -120,7 +122,6 @@ class Optimizer_SGD:
         # Se llama una vez después se actualice cualquier parametro
     def post_update_params(self):
         self.iterations += 1
-
 
 class Optimizer_Adagrad:
 
@@ -178,7 +179,6 @@ class Optimizer_RMSprop:
 
     def post_update_params(self):
         self.iterations += 1
-
 
 class Optimizer_Adam:
 
