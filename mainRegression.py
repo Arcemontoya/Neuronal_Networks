@@ -13,7 +13,7 @@ from Loss import *
 
 #TEMPORAL
 from sklearn.preprocessing import MinMaxScaler
-
+import sys
 
 # Cargar el archivo .mat
 #data = loadmat('engine_dataset.mat')
@@ -22,7 +22,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 engine_data = pd.read_csv('engine_dataset.csv')
 X_raw = engine_data.iloc[:, :-2].values
-y_raw = engine_data.iloc[:, -2:].values  
+y_raw = engine_data.iloc[:, -2:].values
 
 # Normalizacion
 #X = (X - np.min(X)) / (np.max(X) - np.min(X))
@@ -33,8 +33,9 @@ scaler = MinMaxScaler()
 X = scaler.fit_transform(X_raw)
 y = scaler.fit_transform(y_raw)
 
+
 # Inicializar capas de la red
-dense1 = Layer_Dense(2, 60)
+dense1 = Layer_Dense(2, 60, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4)
 activation1 = Activation_ReLU()
 dense2 = Layer_Dense(60, 30)
 activation2 = Activation_ReLU()
@@ -44,16 +45,16 @@ activation3 = Activation_Linear()
 # Inicializar función de pérdida y optimizador
 loss_funcion = Loss_MeanSquaredError()
 
-#optimizer = Adadelta_Optimizer(learning_rate=1, decay=0.9, epsilon=1e-7)
-optimizer = GDX_Optimizer(initial_learning_rate=1, decay=0.9)
+optimizer = Adadelta_Optimizer(learning_rate=1, decay=0.7, epsilon=2e-7)
+#optimizer = GDX_Optimizer(initial_learning_rate=2, decay=0.9)
 
-accuracy_precision = np.std(y) / 250
+#accuracy_precision = np.std(y) / 250
 
-# Entrenar la red
-accuracy_list = []
+#accuracy_list = []
 loss_list = []
 
-for epoch in range(5001):
+# Entrenar la red
+for epoch in range(1001):
     dense1.forward(X)
     activation1.forward(dense1.output)
     dense2.forward(activation1.output)
@@ -67,12 +68,11 @@ for epoch in range(5001):
     loss_list.append(loss)
 
     predictions = activation3.output
-    accuracy = np.mean(np.absolute(predictions - y) < accuracy_precision)
-    accuracy_list.append(accuracy)
+    #accuracy = np.mean(np.absolute(predictions - y) < accuracy_precision)
+    #accuracy_list.append(accuracy)
 
     if not epoch % 100:
         print(f'epoch: {epoch}, ' +
-              f'acc: {accuracy:.3f}, ' +
               f'loss: {loss:.3f} (' +
               f'data_loss: {data_loss:.3f}, ' +
               f'reg_loss: {regularization_loss:.3f}), ' +
@@ -92,19 +92,28 @@ for epoch in range(5001):
     optimizer.update_params(dense3)
     optimizer.post_update_params()
 
-# Graficar la precisión y la pérdida a lo largo de las épocas
-plt.figure(figsize=(12, 5))
+# Graficar la pérdida a lo largo de las épocas
 
-plt.subplot(1, 2, 1)
-plt.plot(accuracy_list)
-plt.title('Precisión durante el entrenamiento')
-plt.xlabel('Época')
-plt.ylabel('Precisión')
-
-plt.subplot(1, 2, 2)
 plt.plot(loss_list)
 plt.title('Pérdida durante el entrenamiento')
 plt.xlabel('Época')
-plt.ylabel('Pérdida')
+plt.ylabel('MSE')
+plt.show()
 
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.scatter(y[:, 0], predictions[:, 0], alpha=0.5)
+plt.plot([0, 1], [0, 1], color='red', linestyle='--')  # Línea de referencia para valores reales vs predichos
+plt.title('Target 1: Valores Reales vs Predichos')
+plt.xlabel('Valores Reales')
+plt.ylabel('Valores Predichos')
+
+plt.subplot(1, 2, 2)
+plt.scatter(y[:, 1], predictions[:, 1], alpha=0.5)
+plt.plot([0, 1], [0, 1], color='red', linestyle='--')  # Línea de referencia para valores reales vs predichos
+plt.title('Target 2: Valores Reales vs Predichos')
+plt.xlabel('Valores Reales')
+plt.ylabel('Valores Predichos')
+
+plt.tight_layout()
 plt.show()
