@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import scipy
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
@@ -10,36 +11,41 @@ from Layer_Dropout import Layer_Dropout
 from Optimizer import *
 from Loss import *
 
+#TEMPORAL
+from sklearn.preprocessing import MinMaxScaler
+
 
 # Cargar el archivo .mat
-data = loadmat('C:/Users/a1271/Downloads/engine_dataset.mat')
+#data = loadmat('engine_dataset.mat')
+#X = data['engineInputs']
+#y = data['engineTargets']
 
-# Imprimir las llaves del archivo para entender su estructura
-print(data.keys())
+engine_data = pd.read_csv('engine_dataset.csv')
+X_raw = engine_data.iloc[:, :-2].values
+y_raw = engine_data.iloc[:, -2:].values  
 
-# Asumir que los datos están en las llaves 'X' y 'y' (esto puede variar)
-X = data['engineInputs']
-y = data['engineTargets']
+# Normalizacion
+#X = (X - np.min(X)) / (np.max(X) - np.min(X))
+#y = (y - np.min(y)) / (np.max(y) - np.min(y))
 
-# Imprimir las formas de los datos
-print('X shape:', X.shape)
-print('y shape:', y.shape)
-
-# Normalizar los datos si es necesario
-X = (X - np.min(X)) / (np.max(X) - np.min(X))
-y = (y - np.min(y)) / (np.max(y) - np.min(y))
+#Normalizacion con sklearn TEMPORAL
+scaler = MinMaxScaler()
+X = scaler.fit_transform(X_raw)
+y = scaler.fit_transform(y_raw)
 
 # Inicializar capas de la red
-dense1 = Layer_Dense(X.shape[1], 64)
+dense1 = Layer_Dense(2, 60)
 activation1 = Activation_ReLU()
-dense2 = Layer_Dense(64, 64)
+dense2 = Layer_Dense(60, 30)
 activation2 = Activation_ReLU()
-dense3 = Layer_Dense(64, 1)
+dense3 = Layer_Dense(30, 2)
 activation3 = Activation_Linear()
 
 # Inicializar función de pérdida y optimizador
 loss_funcion = Loss_MeanSquaredError()
-optimizer = Adadelta_Optimizer(learning_rate=1., decay=0.9, epsilon=1e-7)
+
+#optimizer = Adadelta_Optimizer(learning_rate=1, decay=0.9, epsilon=1e-7)
+optimizer = GDX_Optimizer(initial_learning_rate=1, decay=0.9)
 
 accuracy_precision = np.std(y) / 250
 
@@ -47,7 +53,7 @@ accuracy_precision = np.std(y) / 250
 accuracy_list = []
 loss_list = []
 
-for epoch in range(10001):
+for epoch in range(5001):
     dense1.forward(X)
     activation1.forward(dense1.output)
     dense2.forward(activation1.output)
