@@ -10,6 +10,8 @@ from ActivationFunctions import *
 from Layer_Dropout import Layer_Dropout
 from Optimizer import *
 from Loss import *
+from Normalizacion import *
+from Metricas_desempeño import *
 
 #TEMPORAL
 from sklearn.preprocessing import MinMaxScaler
@@ -25,13 +27,13 @@ X_raw = engine_data.iloc[:, :-2].values
 y_raw = engine_data.iloc[:, -2:].values
 
 # Normalizacion
-#X = (X - np.min(X)) / (np.max(X) - np.min(X))
-#y = (y - np.min(y)) / (np.max(y) - np.min(y))
+X = min_max_normalize(X_raw)
+y = min_max_normalize(y_raw)
 
 #Normalizacion con sklearn TEMPORAL
-scaler = MinMaxScaler()
-X = scaler.fit_transform(X_raw)
-y = scaler.fit_transform(y_raw)
+#scaler = MinMaxScaler()
+#X = scaler.fit_transform(X_raw)
+#y = scaler.fit_transform(y_raw)
 
 
 # Inicializar capas de la red
@@ -43,10 +45,11 @@ dense3 = Layer_Dense(30, 2)
 activation3 = Activation_Linear()
 
 # Inicializar función de pérdida y optimizador
+#loss_funcion = Loss_MeanSquaredError()
 loss_funcion = Loss_MeanSquaredError()
 
 optimizer = Adadelta_Optimizer(learning_rate=1, decay=0.7, epsilon=2e-7)
-#optimizer = GDX_Optimizer(initial_learning_rate=2, decay=0.9)
+#optimizer = GDX_Optimizer(initial_learning_rate=1, decay=0.9)
 
 #accuracy_precision = np.std(y) / 250
 
@@ -54,7 +57,7 @@ optimizer = Adadelta_Optimizer(learning_rate=1, decay=0.7, epsilon=2e-7)
 loss_list = []
 
 # Entrenar la red
-for epoch in range(1001):
+for epoch in range(5001):
     dense1.forward(X)
     activation1.forward(dense1.output)
     dense2.forward(activation1.output)
@@ -100,6 +103,10 @@ plt.xlabel('Época')
 plt.ylabel('MSE')
 plt.show()
 
+# Calcular R^2 para cada target
+r2_target1 = calculate_r2(y[:, 0], predictions[:, 0])
+r2_target2 = calculate_r2(y[:, 1], predictions[:, 1])
+
 plt.figure(figsize=(10, 5))
 plt.subplot(1, 2, 1)
 plt.scatter(y[:, 0], predictions[:, 0], alpha=0.5)
@@ -107,6 +114,7 @@ plt.plot([0, 1], [0, 1], color='red', linestyle='--')  # Línea de referencia pa
 plt.title('Target 1: Valores Reales vs Predichos')
 plt.xlabel('Valores Reales')
 plt.ylabel('Valores Predichos')
+plt.text(0.05, 0.9, f'R² = {r2_target1:.4f}', transform=plt.gca().transAxes)
 
 plt.subplot(1, 2, 2)
 plt.scatter(y[:, 1], predictions[:, 1], alpha=0.5)
@@ -114,6 +122,7 @@ plt.plot([0, 1], [0, 1], color='red', linestyle='--')  # Línea de referencia pa
 plt.title('Target 2: Valores Reales vs Predichos')
 plt.xlabel('Valores Reales')
 plt.ylabel('Valores Predichos')
+plt.text(0.05, 0.9, f'R² = {r2_target2:.4f}', transform=plt.gca().transAxes)
 
 plt.tight_layout()
 plt.show()
