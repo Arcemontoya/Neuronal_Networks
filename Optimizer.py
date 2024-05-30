@@ -1,26 +1,29 @@
 import numpy as np
 
-# Todavía en prueba
-
+# Todavía en pruebas
 class GDX_Optimizer:
-    def __init__(self, initial_learning_rate=1, decay=0.):
+    def __init__(self, initial_learning_rate=1, decay=0.01):
         self.initial_learning_rate = initial_learning_rate
-        self.current_learning_rate = initial_learning_rate
         self.decay = decay
         self.iterations = 0
+        self.current_learning_rate = initial_learning_rate
 
     def pre_update_params(self):
-        if self.decay:
-            self.current_learning_rate = self.initial_learning_rate * (1. / (1. + self.decay * self.iterations))
+        # Actualiza la tasa de aprendizaje antes de cada iteración
+        self.current_learning_rate = self.initial_learning_rate * (1 - self.decay) ** self.iterations
 
     def update_params(self, layer):
-        weight_updates = -self.current_learning_rate * layer.dweights
-        bias_updates = -self.current_learning_rate * layer.dbiases
-
-        layer.weights += weight_updates
-        layer.biases += bias_updates
+        # Aplanar los pesos para simplificar la actualización
+        weights = layer.weights.flatten()
+        # Obtener el gradiente de los pesos
+        df_val = layer.dweights.flatten()
+        # Actualizar los pesos
+        weights -= self.current_learning_rate * df_val
+        # Volver a dar forma a los pesos al tamaño original
+        layer.weights = weights.reshape(layer.weights.shape)
 
     def post_update_params(self):
+        # Incrementa el contador de iteraciones
         self.iterations += 1
 
 

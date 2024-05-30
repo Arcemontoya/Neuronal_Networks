@@ -108,7 +108,7 @@ class Loss_MeanSquaredError(Loss):
 
     def backward(self, dvalues, y_true):
 
-        samples = len(dvalues[0])
+        samples = len(dvalues)
 
         outputs = len(dvalues[0])
 

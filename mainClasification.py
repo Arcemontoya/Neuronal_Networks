@@ -38,13 +38,13 @@ X_normalized = scaler.fit_transform(X)
 # Definir las capas de la red neuronal
 dense1 = Layer_Dense(13, 64, weight_regularizer_l2=5e-4, bias_regularizer_l2=5e-4)
 activation1 = Activation_ReLU()
-dropout1 = Layer_Dropout(0.7)
+dropout1 = Layer_Dropout(0.8)
 #dropout2 = Layer_Dropout(0.5)
 dense2 = Layer_Dense(64, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
 
-#optimizer = Adadelta_Optimizer(learning_rate=1., decay=0.9, epsilon=1e-7)
-optimizer = GDX_Optimizer(initial_learning_rate=2, decay=0.9)
+optimizer = Adadelta_Optimizer(learning_rate=1., decay=0.9, epsilon=1e-7)
+#optimizer = GDX_Optimizer(initial_learning_rate=2, decay=1e-3)
 
 accuracy_list = []
 loss_list = []
