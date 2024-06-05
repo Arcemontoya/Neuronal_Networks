@@ -22,7 +22,7 @@ import sys
 #X = data['engineInputs']
 #y = data['engineTargets']
 
-concrete_data = pd.read_csv('challenge01_dataset22.csv')
+concrete_data = pd.read_csv('concrete_dataset.csv')
 # Asumiendo que la última columna es el target
 X_raw = concrete_data.iloc[:, :-1].values
 y_raw = concrete_data.iloc[:, -1].values.reshape(-1, 1)
@@ -41,8 +41,8 @@ activation3 = Activation_Linear()
 
 # Inicializar función de pérdida y optimizador
 loss_funcion = Loss_MeanSquaredError()
-optimizer = GDX_Optimizer(initial_learning_rate=1.2, decay=1e-4)
-#optimizer = Adadelta_Optimizer(learning_rate=1.3, decay=0.5)
+optimizer = GDX_Optimizer(initial_learning_rate=1.6, decay=1e-3)
+#optimizer = Adadelta_Optimizer(learning_rate=1.6, decay=0.9)
 
 loss_list = []
 
